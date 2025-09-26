@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digit Recognition</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #333;
+        }
+        .container {
+            background-color: #fff;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 450px;
+        }
+        h2 {
+            color: #1a202c;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            margin-bottom: 1.5rem;
+            width: 100%;
+        }
+        .file-input-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+        }
+        .file-input-btn {
+            background-color: #4a90e2;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: block;
+            width: 100%;
+            text-align: center;
+            transition: background-color 0.3s ease;
+        }
+        .file-input-btn:hover {
+            background-color: #357bd9;
+        }
+        #fileName {
+            margin-top: 0.5rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        #result {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 2rem;
+            min-height: 30px;
+            color: #2c3e50;
+        }
+        .message-box {
+            background-color: #fef08a;
+            color: #92400e;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Upload Digit Image</h2>
+        <p>A modern and clean interface to recognize digits from an image.</p>
+        <div class="file-input-wrapper">
+            <button class="file-input-btn">Choose Image</button>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+        <div id="fileName">No file chosen</div>
+        <button onclick="predict()">Predict Digit</button>
+        <div class="message-box" id="messageBox"></div>
+        <h3 id="result"></h3>
+    </div>
+
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function() {
+            const fileName = this.files[0] ? this.files[0].name : 'No file chosen';
+            document.getElementById('fileName').innerText = fileName;
+        });
+        
+        async function predict() {
+            let fileInput = document.getElementById("fileInput");
+            let resultElement = document.getElementById("result");
+            let messageBox = document.getElementById("messageBox");
+
+            // Clear previous results and messages
+            resultElement.innerText = '';
+            messageBox.style.display = 'none';
+
+            if (fileInput.files.length === 0) {
+                messageBox.innerText = "Please select an image first!";
+                messageBox.style.display = 'block';
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            resultElement.innerText = "Predicting...";
+
+            try {
+                let response = await fetch("http://127.0.0.1:8000/predict/", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                let data = await response.json();
+                resultElement.innerText = "Predicted Digit: " + data.predicted_digit;
+            } catch (error) {
+                resultElement.innerText = "Prediction failed.";
+                messageBox.innerText = `Error: ${error.message}. Please check the server connection.`;
+                messageBox.style.display = 'block';
+                console.error("Prediction error:", error);
+            }
+        }
+    </script>
+</body>
+</html>
+
