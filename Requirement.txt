@@ -3,4 +3,7 @@ Numpy
 Pandas
 Matplotlib.pyplot
 Tensorflow/Keras
-FastAPI
+fastapi
+uvicorn
+pillow
+python-multipart
