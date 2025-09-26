@@ -3,7 +3,8 @@ uvicorn
 tensorflow
 numpy
 pandas
-matplotlib.pyplot
+matplotlib
 pillow
 jinja2
 python-multipart
+
