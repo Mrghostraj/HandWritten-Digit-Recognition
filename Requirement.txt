@@ -2,7 +2,7 @@ Python
 Numpy
 Pandas
 Matplotlib.pyplot
-Tensorflow/Keras
+Tensorflow
 fastapi
 uvicorn
 pillow
