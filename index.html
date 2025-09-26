@@ -139,9 +139,9 @@
             resultElement.innerText = "Predicting...";
 
             try {
-                let response = await fetch("http://0.0.0.0:$PORT/predict/", {
-                    method: "POST",
-                    body: formData
+                let response = await fetch(`${window.location.origin}/predict/`, {
+                method: "POST",
+                body: formData
                 });
 
                 if (!response.ok) {
@@ -160,6 +160,7 @@
     </script>
 </body>
 </html>
+
 
 
 
