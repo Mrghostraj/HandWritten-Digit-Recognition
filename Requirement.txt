@@ -1,9 +1,9 @@
-Python
-Numpy
-Pandas
-Matplotlib.pyplot
-Tensorflow
 fastapi
 uvicorn
+tensorflow
+numpy
+pandas
+matplotlib.pyplot
 pillow
+jinja2
 python-multipart
