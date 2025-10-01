@@ -7,5 +7,6 @@ matplotlib
 pillow
 jinja2
 python-multipart
-gnucorn
+gunicorn
+
 
