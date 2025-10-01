@@ -3,163 +3,322 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digit Recognition</title>
+    <title>Handwritten Digit Classifier</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter font -->
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f0f2f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7;
             min-height: 100vh;
-            margin: 0;
-            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .container {
-            background-color: #fff;
-            padding: 2.5rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            width: 90%;
-            max-width: 450px;
+        /* Custom style for the canvas border and look */
+        #drawingCanvas {
+            cursor: crosshair;
+            border: 4px solid #3b82f6; /* Blue border */
+            border-radius: 0.75rem; /* rounded-xl */
+            background-color: #000000; /* Black background for drawing white digits */
+            touch-action: none; /* Prevents scrolling on touch */
         }
-        h2 {
-            color: #1a202c;
-            font-size: 2rem;
-            margin-bottom: 1rem;
+        .loading-dot {
+            animation: bounce 1.4s infinite ease-in-out both;
         }
-        .file-input-wrapper {
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
-            margin-bottom: 1.5rem;
-            width: 100%;
-        }
-        .file-input-wrapper input[type=file] {
-            font-size: 100px;
-            position: absolute;
-            left: 0;
-            top: 0;
-            opacity: 0;
-        }
-        .file-input-btn {
-            background-color: #4a90e2;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: block;
-            width: 100%;
-            text-align: center;
-            transition: background-color 0.3s ease;
-        }
-        .file-input-btn:hover {
-            background-color: #357bd9;
-        }
-        #fileName {
-            margin-top: 0.5rem;
-            color: #666;
-            font-size: 0.9rem;
-        }
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            font-size: 1rem;
-            border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-        }
-        button:hover {
-            background-color: #0056b3;
-            transform: translateY(-2px);
-        }
-        button:active {
-            transform: translateY(0);
-        }
-        #result {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-top: 2rem;
-            min-height: 30px;
-            color: #2c3e50;
-        }
-        .message-box {
-            background-color: #fef08a;
-            color: #92400e;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 1rem;
-            display: none;
-            font-size: 0.9rem;
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h2>Upload Digit Image</h2>
-        <p>A modern and clean interface to recognize digits from an image.</p>
-        <div class="file-input-wrapper">
-            <button class="file-input-btn">Choose Image</button>
-            <input type="file" id="fileInput" accept="image/*">
+<body class="p-4">
+
+    <div id="app" class="w-full max-w-md bg-white p-6 md:p-8 rounded-2xl shadow-2xl border border-gray-100">
+        <!-- Header -->
+        <h1 class="text-3xl md:text-4xl font-extrabold text-gray-800 mb-2 text-center">
+            <span class="text-blue-600">AI</span> Digit Predictor
+        </h1>
+        <p class="text-center text-gray-500 mb-6">Draw a single digit (0-9) below.</p>
+
+        <!-- Canvas Area -->
+        <div class="flex justify-center mb-6">
+            <canvas id="drawingCanvas" width="280" height="280" class="w-full max-w-xs md:max-w-none aspect-square"></canvas>
         </div>
-        <div id="fileName">No file chosen</div>
-        <button onclick="predict()">Predict Digit</button>
-        <div class="message-box" id="messageBox"></div>
-        <h3 id="result"></h3>
+
+        <!-- Controls -->
+        <div class="flex space-x-4">
+            <button id="clearBtn" class="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-4 focus:ring-red-300">
+                Clear
+            </button>
+            <button id="predictBtn" class="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                Predict Digit
+            </button>
+        </div>
+
+        <!-- Result/Message Area -->
+        <div id="messageBox" class="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200 min-h-[6rem] flex items-center justify-center text-center">
+            <p id="resultText" class="text-xl text-gray-600 font-medium">Draw something and click 'Predict Digit'!</p>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="hidden mt-4 flex justify-center items-center">
+            <span class="text-blue-600 text-lg mr-2">Predicting...</span>
+            <div class="flex space-x-1">
+                <div class="loading-dot w-3 h-3 bg-blue-500 rounded-full"></div>
+                <div class="loading-dot w-3 h-3 bg-blue-500 rounded-full"></div>
+                <div class="loading-dot w-3 h-3 bg-blue-500 rounded-full"></div>
+            </div>
+        </div>
     </div>
 
     <script>
-        document.getElementById('fileInput').addEventListener('change', function() {
-            const fileName = this.files[0] ? this.files[0].name : 'No file chosen';
-            document.getElementById('fileName').innerText = fileName;
-        });
-        
-        async function predict() {
-            let fileInput = document.getElementById("fileInput");
-            let resultElement = document.getElementById("result");
-            let messageBox = document.getElementById("messageBox");
+        // --- Configuration ---
+        const PREDICTION_API_URL = 'http://127.0.0.1:8000/predict/';
+        const RETRY_LIMIT = 3;
+        const INITIAL_RETRY_DELAY_MS = 1000;
 
-            // Clear previous results and messages
-            resultElement.innerText = '';
-            messageBox.style.display = 'none';
+        // --- DOM Elements ---
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+        const clearBtn = document.getElementById('clearBtn');
+        const predictBtn = document.getElementById('predictBtn');
+        const resultText = document.getElementById('resultText');
+        const loadingIndicator = document.getElementById('loadingIndicator');
 
-            if (fileInput.files.length === 0) {
-                messageBox.innerText = "Please select an image first!";
-                messageBox.style.display = 'block';
-                return;
+        // --- Canvas Drawing State ---
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        // --- Initialization and Utility Functions ---
+
+        // Set up canvas context for drawing a thick white line on black background
+        function setupCanvas() {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height); // Black background
+            ctx.lineWidth = 15; // Thick line for drawing
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#FFFFFF'; // White drawing color
+        }
+
+        // Clears the canvas and resets the message
+        function clearCanvas() {
+            setupCanvas();
+            resultText.innerHTML = "Draw a single digit (0-9) and click 'Predict Digit'.";
+            resultText.className = 'text-xl text-gray-600 font-medium';
+            predictBtn.disabled = false;
+        }
+
+        // Converts screen coordinates to canvas coordinates
+        function getCanvasCoordinates(event) {
+            const rect = canvas.getBoundingClientRect();
+            let clientX, clientY;
+
+            if (event.touches) {
+                clientX = event.touches[0].clientX;
+                clientY = event.touches[0].clientY;
+            } else {
+                clientX = event.clientX;
+                clientY = event.clientY;
             }
 
-            let formData = new FormData();
-            formData.append("file", fileInput.files[0]);
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
 
-            resultElement.innerText = "Predicting...";
+        // Draws a line segment
+        function draw(x, y) {
+            if (!isDrawing) return;
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            [lastX, lastY] = [x, y];
+        }
 
-            try {
-                let response = await fetch(`${window.location.origin}/predict/`, {
-                method: "POST",
-                body: formData
-                });
+        // --- Event Handlers for Drawing ---
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+        function startDrawing(e) {
+            e.preventDefault();
+            isDrawing = true;
+            const { x, y } = getCanvasCoordinates(e);
+            [lastX, lastY] = [x, y];
+            draw(x, y); // Draw a point immediately for a tap
+        }
 
-                let data = await response.json();
-                resultElement.innerText = "Predicted Digit: " + data.predicted_digit;
-            } catch (error) {
-                resultElement.innerText = "Prediction failed.";
-                messageBox.innerText = `Error: ${error.message}. Please check the server connection.`;
-                messageBox.style.display = 'block';
-                console.error("Prediction error:", error);
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        function continueDrawing(e) {
+            e.preventDefault();
+            if (isDrawing) {
+                const { x, y } = getCanvasCoordinates(e);
+                draw(x, y);
             }
         }
+
+        // Mouse events
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', continueDrawing);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        // Touch events
+        canvas.addEventListener('touchstart', startDrawing);
+        canvas.addEventListener('touchmove', continueDrawing);
+        canvas.addEventListener('touchend', stopDrawing);
+        canvas.addEventListener('touchcancel', stopDrawing);
+
+        clearBtn.addEventListener('click', clearCanvas);
+        predictBtn.addEventListener('click', () => {
+            // Check if the canvas is mostly black (empty) before predicting
+            if (isCanvasBlank(canvas)) {
+                showMessage("Please draw a digit (0-9) on the canvas first!", 'error');
+            } else {
+                predictDigit();
+            }
+        });
+
+        // Simple check to prevent sending a blank canvas
+        function isCanvasBlank(canvas) {
+            const pixelData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            for (let i = 0; i < pixelData.length; i += 4) {
+                // Check if the pixel is not black (R, G, B are not 0)
+                if (pixelData[i] !== 0 || pixelData[i + 1] !== 0 || pixelData[i + 2] !== 0) {
+                    // Check if the pixel is white (R, G, B are 255)
+                    if (pixelData[i] === 255 && pixelData[i + 1] === 255 && pixelData[i + 2] === 255) {
+                        // Found a white pixel, meaning something was drawn
+                        return false;
+                    }
+                }
+            }
+            // All pixels are black or near-black
+            return true;
+        }
+
+        // Shows a message in the result box
+        function showMessage(text, type = 'info') {
+            resultText.textContent = text;
+            let classes = 'text-xl font-semibold ';
+            if (type === 'success') {
+                classes += 'text-green-600';
+            } else if (type === 'error') {
+                classes += 'text-red-500';
+            } else if (type === 'info') {
+                classes += 'text-gray-600';
+            } else if (type === 'result') {
+                classes += 'text-blue-700 text-5xl';
+            }
+            resultText.className = classes;
+        }
+
+        // Toggles loading state
+        function setLoading(isLoading) {
+            predictBtn.disabled = isLoading;
+            clearBtn.disabled = isLoading;
+            loadingIndicator.classList.toggle('hidden', !isLoading);
+            if (isLoading) {
+                showMessage("Sending image to server...", 'info');
+            }
+        }
+
+        // --- Prediction Logic ---
+
+        /**
+         * Converts the canvas content to a PNG Blob and sends it to the FastAPI server.
+         * Uses exponential backoff for retries.
+         */
+        async function predictDigit() {
+            setLoading(true);
+            
+            // 1. Create a 28x28 grayscale image from the canvas for the model
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = 28;
+            tempCanvas.height = 28;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // Draw the 280x280 canvas onto the 28x28 canvas
+            tempCtx.drawImage(canvas, 0, 0, 28, 28); 
+
+            let retryCount = 0;
+
+            const sendRequest = async () => {
+                return new Promise((resolve, reject) => {
+                    tempCanvas.toBlob(async (blob) => {
+                        if (!blob) {
+                            reject(new Error("Failed to create image blob from canvas."));
+                            return;
+                        }
+
+                        const formData = new FormData();
+                        // The file name 'digit.png' is arbitrary, but required by FormData.
+                        // The server expects the field name to be 'file'.
+                        formData.append('file', blob, 'digit.png'); 
+
+                        try {
+                            const response = await fetch(PREDICTION_API_URL, {
+                                method: 'POST',
+                                body: formData
+                            });
+
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+
+                            const data = await response.json();
+                            resolve(data);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    }, 'image/png');
+                });
+            };
+
+            while (retryCount < RETRY_LIMIT) {
+                try {
+                    const data = await sendRequest();
+                    // SUCCESS
+                    showMessage(`Predicted Digit: ${data.predicted_digit}`, 'result');
+                    setLoading(false);
+                    return;
+
+                } catch (error) {
+                    console.error(`Attempt ${retryCount + 1} failed:`, error.message);
+                    retryCount++;
+
+                    if (retryCount >= RETRY_LIMIT) {
+                        // FINAL FAILURE
+                        const commonMsg = error.message.includes('Failed to fetch') || error.message.includes('404')
+                            ? "Could not connect to the FastAPI server. Ensure it is running at http://127.0.0.1:8000."
+                            : `Prediction failed after ${RETRY_LIMIT} attempts. Error: ${error.message}.`;
+                        
+                        showMessage(commonMsg, 'error');
+                        setLoading(false);
+                        return;
+                    }
+
+                    // WAIT AND RETRY
+                    const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, retryCount - 1);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+
+        // Initial setup call
+        window.onload = clearCanvas;
     </script>
 </body>
 </html>
+
+
 
 
 
