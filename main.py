@@ -28,8 +28,8 @@ def preprocess_image(image: Image.Image):
     return img_array
 
 @app.get('/')
-def index():
-    return {'Message': "Hello Brother"}
+def read_root():
+    return FileResponse("index.html")
 
 # ✅ Prediction route
 @app.post("/predict/")
@@ -44,6 +44,7 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run("main:app", host="0.0.0.0", port=port)
     
+
 
 
 
