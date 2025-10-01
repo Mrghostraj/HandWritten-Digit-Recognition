@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
 from PIL import Image
 import tensorflow as tf
+import os
 
 # ✅ Load model
 model = tf.keras.models.load_model("digit_model.keras")
@@ -40,9 +41,10 @@ async def predict(file: UploadFile = File(...)):
     return {"predicted_digit": digit}
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000)) 
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
     
+
 
 
 
