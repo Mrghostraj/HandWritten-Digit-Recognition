@@ -14,13 +14,13 @@ model = tf.keras.models.load_model("digit_model.keras")
 app = FastAPI()
 
 # ✅ CORS (for frontend access)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],  
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 
 # ✅ Preprocess image
 def preprocess_image(image: Image.Image):
@@ -46,6 +46,7 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run("main:app", host="0.0.0.0", port=port)
     
+
 
 
 
