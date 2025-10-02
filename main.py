@@ -4,6 +4,7 @@ import numpy as np
 from PIL import Image
 import tensorflow as tf
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 import os
 
 # ✅ Load model
@@ -45,6 +46,7 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run("main:app", host="0.0.0.0", port=port)
     
+
 
 
 
